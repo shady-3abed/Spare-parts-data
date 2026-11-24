@@ -150,13 +150,22 @@ def main():
         header = [(str(h).strip() if h is not None else None) for h in rws[0]]
         idx = {h: i for i, h in enumerate(header) if h}
         for r in rws[1:]:
-            name = clean(r[idx['Spare Parts']]) if 'Spare Parts' in idx else None
-            if not name:
+            if not any(v is not None and str(v).strip() != '' for v in r):
                 continue
             vendor = vtype = None
             for h, t in VH.items():
                 if h in idx and nc(r[idx[h]]):
                     vendor, vtype = nc(r[idx[h]]), t
+            name = clean(r[idx['Spare Parts']]) if 'Spare Parts' in idx else None
+            if not name:
+                code = nc(r[idx['New SAP']]) if 'New SAP' in idx else None
+                if not code:
+                    code = nc(r[idx['SAP Code']]) if 'SAP Code' in idx else None
+                if not code:
+                    code = vendor
+                if not code:
+                    continue
+                name = f"بدون اسم ({code})"
             rows.append({'m': mi, 'name': name, 'vendor': vendor, 'vtype': vtype,
                          'sap': nc(r[idx['SAP Code']]) if 'SAP Code' in idx else None,
                          'newsap': nc(r[idx['New SAP']]) if 'New SAP' in idx else None,
