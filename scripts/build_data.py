@@ -78,6 +78,53 @@ def clean(s):
     return s or None
 
 
+def dashboard_meta(wb):
+    """Last Refresh / Last Sync info from the workbook's Dashboard sheet.
+
+    Each label sits two columns left of its value (G1 'Last Refresh' -> I1
+    '11/21/2026  12:44:24 PM'; A10 'Last Sync Time' -> C10 datetime;
+    A11 'Last Sync Result' -> C11 'No Changes'; A12 'Last Run Changes' -> C12 0).
+    Returns {} when the sheet or the labels are missing.
+    """
+    if 'Dashboard' not in wb.sheetnames:
+        return {}
+    ws = wb['Dashboard']
+    labels = {'last_refresh': 'Last Refresh', 'last_sync_time': 'Last Sync Time',
+              'last_sync_result': 'Last Sync Result', 'last_run_changes': 'Last Run Changes'}
+    found = {}
+    for row in ws.iter_rows(min_row=1, max_row=20):
+        for c in row:
+            if isinstance(c.value, str):
+                for key, lab in labels.items():
+                    if c.value.strip() == lab and key not in found:
+                        found[key] = ws.cell(row=c.row, column=c.column + 2).value
+
+    def iso(v):
+        if v is None:
+            return None
+        if hasattr(v, 'isoformat'):
+            return v.isoformat()
+        s = re.sub(r'\s+', ' ', str(v)).strip()
+        for fmt in ('%m/%d/%Y %I:%M:%S %p', '%m/%d/%Y %H:%M:%S',
+                    '%Y-%m-%d %H:%M:%S', '%Y-%m-%d'):
+            try:
+                return datetime.strptime(s, fmt).isoformat()
+            except Exception:
+                pass
+        return s
+
+    out = {}
+    if 'last_refresh' in found:
+        out['last_refresh'] = iso(found['last_refresh'])
+    if 'last_sync_time' in found:
+        out['last_sync_time'] = iso(found['last_sync_time'])
+    if 'last_sync_result' in found:
+        out['last_sync_result'] = str(found['last_sync_result']).strip()
+    if 'last_run_changes' in found:
+        out['last_run_changes'] = nn(found['last_run_changes'])
+    return out
+
+
 def main():
     src = find_workbook()
     if src is None:
@@ -254,6 +301,7 @@ def main():
 
     data = {
         'generated': date.today().isoformat(),
+        'dashboard_meta': dashboard_meta(wb),
         'machines': MACHINES,
         'catalog': catalog,
         'usage': usage,
