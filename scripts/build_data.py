@@ -24,8 +24,22 @@ from pathlib import Path
 import openpyxl
 
 ROOT = Path(__file__).resolve().parent.parent
-SRC = ROOT / 'workbook' / 'All_Machines_Spareparts_Final.xlsm'
+WORKBOOK_DIR = ROOT / 'workbook'
+EXACT_NAME = 'All_Machines_Spareparts_Final.xlsm'
 OUT = ROOT / 'website_data.json'
+
+
+def find_workbook():
+    """Pick the workbook to read: the exact expected name if present, else the
+    single .xlsm/.xlsx in workbook/ (uploads from a phone often arrive renamed,
+    e.g. with spaces or a -1 suffix). Returns None when nothing usable exists."""
+    exact = WORKBOOK_DIR / EXACT_NAME
+    if exact.exists():
+        return exact
+    cands = sorted(WORKBOOK_DIR.glob('*.xlsm')) + sorted(WORKBOOK_DIR.glob('*.xlsx'))
+    if len(cands) == 1:
+        return cands[0]
+    return None
 
 MACHINES = ['Mdo1', 'Mdo2', 'PE01', 'PE02', 'Mdo3', 'Vista1', 'Vista2', 'Mira1', 'Mira2', 'Novo',
             'Compound', 'Debagger', 'INK', 'Plastic System', 'Renzmann', 'NGR', 'KC01', 'KC02',
@@ -65,13 +79,15 @@ def clean(s):
 
 
 def main():
-    if not SRC.exists():
-        print(f'ERROR: workbook not found: {SRC}', file=sys.stderr)
+    src = find_workbook()
+    if src is None:
+        print('ERROR: no workbook found in the workbook/ folder.', file=sys.stderr)
         print('Upload All_Machines_Spareparts_Final.xlsm to the workbook/ folder.',
               file=sys.stderr)
         return 1
+    print('reading workbook:', src.name)
 
-    wb = openpyxl.load_workbook(SRC, data_only=True, read_only=True)
+    wb = openpyxl.load_workbook(src, data_only=True, read_only=True)
     missing = [s for s in list(MACHINES) + EXTRA_SHEETS if s not in wb.sheetnames]
     if missing:
         print(f'ERROR: workbook is missing these sheets: {", ".join(missing)}',
