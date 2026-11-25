@@ -97,6 +97,128 @@ def find_workbook():
         return cands[0]
     return None
 
+
+# ---- Dashboard edit overrides (stock-changes.json) ----
+# The dashboard's Adora-only edit mode downloads stock-changes.json: absolute
+# stock / min-stock values keyed by New SAP (or by name), plus withdrawal
+# entries carrying a stock_after. Adora uploads that file to workbook/ (or
+# the repo root) and this applies it on top of the workbook values, so the
+# team's live data reflects his edits until the workbook itself is updated.
+# Values are absolute, so re-applying the same file is idempotent.
+CHANGES_CANDIDATES = [WORKBOOK_DIR / 'stock-changes.json',
+                      ROOT / 'stock-changes.json']
+_MISSING = object()
+
+
+def _change_key(c):
+    """Normalise one change entry to (newsap, name, vendor, stock, min).
+    stock/min are _MISSING when the key is absent, None when explicitly null
+    (meaning 'unrecorded'), else a number."""
+    if not isinstance(c, dict):
+        return None
+    newsap = nc(c.get('newsap') or c.get('new_sap') or c.get('newSap')
+                or c.get('code') or c.get('key'))
+    name = clean(c.get('name'))
+    vendor = nc(c.get('vendor'))
+    stock = _MISSING
+    for k in ('stock', 'new_stock', 'newStock', 'stock_after'):
+        if k in c:
+            stock = nn(c[k]) if c[k] is not None else None
+            break
+    mn = _MISSING
+    for k in ('min', 'min_stock', 'minStock', 'new_min'):
+        if k in c:
+            mn = nn(c[k]) if c[k] is not None else None
+            break
+    if not newsap and not name:
+        return None
+    return (newsap, name, vendor, stock, mn)
+
+
+def load_stock_changes():
+    """Read stock-changes.json (workbook/ first, else repo root). Returns a
+    list of normalised change tuples. Empty list when the file is absent."""
+    path = None
+    for p in CHANGES_CANDIDATES:
+        if p.exists():
+            path = p
+            break
+    if path is None:
+        return []
+    try:
+        raw = json.loads(path.read_text(encoding='utf-8-sig'))
+    except Exception as e:
+        print(f'WARNING: could not read {path.name}: {e}', file=sys.stderr)
+        return []
+    entries = []
+    if isinstance(raw, dict):
+        for key in ('overrides', 'changes', 'items', 'entries', 'withdrawals'):
+            v = raw.get(key)
+            if isinstance(v, list):
+                entries.extend(v)
+            elif isinstance(v, dict):
+                for k, val in v.items():
+                    if isinstance(val, dict):
+                        d = dict(val)
+                        if k and str(k)[0].isdigit():
+                            d.setdefault('newsap', k)
+                        else:
+                            d.setdefault('name', k)
+                        entries.append(d)
+        if not entries:
+            entries = [raw]
+    elif isinstance(raw, list):
+        entries = raw
+    out = []
+    for c in entries:
+        t = _change_key(c)
+        if t:
+            out.append(t)
+    return out
+
+
+def apply_stock_changes(catalog, status_fn):
+    """Apply absolute stock/min overrides to the catalog in place, recomputing
+    each affected item's status. Returns (applied, skipped) counts."""
+    changes = load_stock_changes()
+    if not changes:
+        return 0, 0
+    applied = 0
+    skipped = 0
+    for newsap, name, vendor, stock, mn in changes:
+        target = None
+        if newsap:
+            for c in catalog:
+                if c['newsap'] and str(c['newsap']).strip() == str(newsap).strip():
+                    target = c
+                    break
+        if target is None and name:
+            cands = [c for c in catalog if c['name'] and c['name'].lower() == name.lower()]
+            if vendor:
+                for c in cands:
+                    if c['vendor'] and str(c['vendor']).strip() == str(vendor).strip():
+                        target = c
+                        break
+            if target is None and len(cands) == 1:
+                target = cands[0]
+            elif target is None and len(cands) > 1:
+                print(f"WARNING: name '{name}' matches {len(cands)} catalog items; "
+                      f"skipping (give a New SAP or vendor)", file=sys.stderr)
+                skipped += 1
+                continue
+        if target is None:
+            print(f"WARNING: no catalog item for change "
+                  f"(newsap={newsap}, name={name})", file=sys.stderr)
+            skipped += 1
+            continue
+        if stock is not _MISSING:
+            target['stock'] = stock
+        if mn is not _MISSING:
+            target['min'] = mn
+        target['status'] = status_fn(target['stock'], target['min'])
+        applied += 1
+    return applied, skipped
+
 MACHINES = ['Mdo1', 'Mdo2', 'PE01', 'PE02', 'Mdo3', 'Vista1', 'Vista2', 'Mira1', 'Mira2', 'Novo',
             'Compound', 'Debagger', 'INK', 'Plastic System', 'Renzmann', 'NGR', 'KC01', 'KC02',
             'KC03', 'KC04', 'KH01', 'Bimec S01', 'Ashe S02', 'Kampf S03', 'Bimec S04', 'Kampf S06',
@@ -302,6 +424,13 @@ def main():
             'machines': machines, 'n_machines': len(machines), 'rows': len(g),
             'succ': succ, 'prs': prs, 'labels': labels,
         })
+    # ---- Dashboard edit overrides (stock-changes.json) ----
+    # Apply Adora's dashboard edits on top of the workbook values, before the
+    # sort, so the new statuses drive the ordering and the CSV exports.
+    n_applied, n_skipped = apply_stock_changes(catalog, status)
+    if n_applied or n_skipped:
+        print(f'stock-changes.json: applied {n_applied}, skipped {n_skipped}')
+
     # sort catalog: status severity, then name
     sev = {'Critical': 0, 'Below Min': 1, 'Reorder Soon': 2, 'No Min': 3, 'Healthy': 4}
     catalog_sorted = sorted(catalog, key=lambda c: (sev[c['status']], (c['name'] or '').lower()))
