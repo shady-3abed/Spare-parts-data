@@ -13,6 +13,7 @@ lower-cased name + vendor), same most-common value picks, same status rules,
 same sort order, same compact usage rows. Only the file paths and the
 `generated` date (today instead of a hard-coded date) differ.
 """
+import csv
 import json
 import os
 import re
@@ -27,6 +28,61 @@ ROOT = Path(__file__).resolve().parent.parent
 WORKBOOK_DIR = ROOT / 'workbook'
 EXACT_NAME = 'All_Machines_Spareparts_Final.xlsm'
 OUT = ROOT / 'website_data.json'
+CSV_DIR = ROOT / 'csv-exports'
+
+
+def _s(v):
+    """Render a value for CSV: None -> '', otherwise str()."""
+    return '' if v is None else str(v)
+
+
+def write_csvs(catalog, sa_rows):
+    """Write the three CSV exports the dashboard's download buttons produce,
+    so the team can download them as files (the in-page download is blocked
+    by the browser sandbox). Files are UTF-8 with BOM so Arabic opens
+    correctly in Excel.
+
+    - stock-alerts.csv: the dashboard's Stock Alerts tab, exactly. Rule:
+      stock == 0, or status Critical / Below Min, or stock unrecorded with
+      PCS > 0 (unrecorded stock counted as 0, per Adora's 2026-11-24 choice,
+      option A). Sorted by PCS descending (stable, so ties keep catalog
+      order, the same order the dashboard shows). Unrecorded stock is
+      written as 0.
+    - catalog.csv: the full unified catalog, in catalog order.
+    - stock-analysis.csv: the Stock_Analysis sheet as-is, in sheet order.
+    """
+    CSV_DIR.mkdir(exist_ok=True)
+
+    alerts = [c for c in catalog
+              if c['stock'] == 0 or c['status'] in ('Critical', 'Below Min')
+              or (c['stock'] is None and (c['pcs'] or 0) > 0)]
+    alerts = sorted(alerts, key=lambda c: -(c['pcs'] or 0))
+    with open(CSV_DIR / 'stock-alerts.csv', 'w', encoding='utf-8-sig', newline='') as f:
+        w = csv.writer(f)
+        w.writerow(['Name', 'New SAP', 'Vendor Code', 'Vendor Type', 'PCS', 'Stock',
+                    'EXT Stock', 'Min Stock', 'Status', 'PR Numbers', 'Machines Count'])
+        for c in alerts:
+            w.writerow([_s(c['name']), _s(c['newsap']), _s(c['vendor']), _s(c['vtype']),
+                        _s(c['pcs']), '0' if c['stock'] is None else _s(c['stock']),
+                        _s(c['ext']), _s(c['min']), _s(c['status']),
+                        '; '.join(c['prs']), _s(c['n_machines'])])
+
+    with open(CSV_DIR / 'catalog.csv', 'w', encoding='utf-8-sig', newline='') as f:
+        w = csv.writer(f)
+        w.writerow(['Name', 'New SAP', 'SAP', 'Vendor Code', 'Vendor Type', 'PCS', 'Stock',
+                    'EXT Stock', 'Min Stock', 'Status', 'Machines Count', 'Rows'])
+        for c in catalog:
+            w.writerow([_s(c['name']), _s(c['newsap']), _s(c['sap']), _s(c['vendor']),
+                        _s(c['vtype']), _s(c['pcs']), _s(c['stock']), _s(c['ext']),
+                        _s(c['min']), _s(c['status']), _s(c['n_machines']), _s(c['rows'])])
+
+    with open(CSV_DIR / 'stock-analysis.csv', 'w', encoding='utf-8-sig', newline='') as f:
+        w = csv.writer(f)
+        w.writerow(['Code', 'Name', 'PCS', 'Stock', 'Min Stock', 'Status'])
+        for x in sa_rows:
+            w.writerow([_s(x['code']), _s(x['name']), _s(x['pcs']), _s(x['stock']),
+                        _s(x['min']), _s(x['status'])])
+    return len(alerts)
 
 
 def find_workbook():
@@ -323,6 +379,9 @@ def main():
     }
     with open(OUT, 'w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, separators=(',', ':'))
+    n_alerts = write_csvs(catalog, sa_rows)
+    print('CSV exports:', 'stock-alerts', n_alerts, '| catalog', len(catalog),
+          '| stock-analysis', len(sa_rows))
     print('catalog entries:', len(catalog))
     print('  with newsap:', sum(1 for c in catalog if c['newsap']))
     print('  without newsap (name+vendor key):', sum(1 for c in catalog if not c['newsap']))
