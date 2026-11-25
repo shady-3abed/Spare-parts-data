@@ -440,7 +440,7 @@ Solvent Analyzer Sensor,,35045780,W&H,9,0,,,No Min,,3
 Adapter IE-M12- a,,35023863,W&H,8,0,,,No Min,,2
 Air C.B NZM 4-XR /60MS,,35018202,W&H,8,0,,,No Min,,4
 Auxiliary contactor 3RH2140-2BB40+3RH2911-2GA31,,,,8,0,,,No Min,,1
-BST Flash LED,60173998,,,8,0,,,No Min,,1
+BST Flash LED,60173998,,,8,0,,,No Min,12592623,4
 Busbar 6SL3162-2AA00-0AA0,60013423,878006035,Kampf,8,0,9,,No Min,,2
 Bushing Adapter,,35019321,W&H,8,0,,,No Min,,1
 C.B 2A,,35087135,W&H,8,0,,,No Min,,2
@@ -1074,7 +1074,7 @@ Blank legend ZBY9101,60046281,913501748,Lemo,2,0,5,,No Min,,1
 BST Bus Cable,,35085723,W&H,2,0,,,No Min,,1
 BST Camera Motor MICROSTEP SHS 56/200-K744-4317,60005747,35044189,W&H,2,0,,,No Min,,2
 BST Distribution Board,,35084693,W&H,2,0,,,No Min,,1
-BST FLASH LED CARD,60173999,,,2,0,,,No Min,,1
+BST FLASH LED CARD,60173999,,,2,0,,,No Min,12592623,4
 Bus Cable,,35084818,W&H,2,0,,,No Min,,1
 Bus Cable,,35094819,W&H,2,0,,,No Min,,1
 Bus Cable,,35081907,W&H,2,0,,,No Min,,1

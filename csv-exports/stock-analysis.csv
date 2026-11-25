@@ -4,7 +4,7 @@
 60084169,SSR - SOB900100,182,5,4,Healthy
 60153787,Input Module X20 At 4222,15,4,1,Healthy
 60153706,Safety Relay BH 5928,5,3,1,Healthy
-60001942,X20 DO 9322,449,5,1,Healthy
+60001942,X20 DO 9322,454,5,1,Healthy
 60001809,X20 DI 9371,502,5,4,Healthy
 60153703,Interface Module X20 IF1030,5,3,0,Healthy
 60153693,Module X20 IF1072,26,3,0,Healthy
@@ -1040,7 +1040,7 @@
 35064943,Motor 1PH7 163-2EF00-0CD9-R1Y Ventilator,8,0,,No Min
 60135702,FAN EMBPAPST W2D210-EA10-22 87W 2750D/D,22,2,,No Min
 35065365,Motor 1PH8165-1ED13-0CC1-Z,8,0,,No Min
-35044310,Encoder Plug,4,0,,No Min
+35044310,Encoder Socket,4,0,,No Min
 35066022,Encoder HeidenHain AM204888.037-2048,12,0,,No Min
 35059376,Valve Unit,4,0,,No Min
 60002702,Buton Socket Bartec Varnost 07-3323-2400,15,10,,No Min
@@ -1392,7 +1392,6 @@ SERSA00313,Laser Scanner CU411-RS4,2,1,,No Min
 60003739,Module Profibus X20 IF1061,1,2,,No Min
 60126501,PC 5P91:212502.004-00 (MAT 901,1,0,,No Min
 [No Code],System Unit APC2100,1,0,,No Min
-60020438/60001942,module X20DO9322,5,3,,No Min
 60003732,AO X20 AO 2622,2,3,,No Min
 60003733,module X20AT 2222,1,3,,No Min
 [No Code],connector module 5COSD3.1000-00,1,0,,No Min
@@ -1465,7 +1464,6 @@ SERSA00313,Laser Scanner CU411-RS4,2,1,,No Min
 [No Code],"miniature circuit-breaker iC60H 6A/1 pol. ""C""",1,0,,No Min
 [No Code],"miniature circuit-breaker iC60H 2A/1 pol. ""C""",1,0,,No Min
 60015447,Safety Sensor EVA 2TLA020046R0800,3,3,,No Min
-60085095,Temperature Sensor TF-CX-12A-05S-S0-F0-T,3,2,,No Min
 60084444,ThermoCouple BT-KS2N,6,5,,No Min
 60004663,Heater ACA/1.425KW/12.5*210,5,4,,No Min
 60002190,Heater HOTEST/2.5KW/16*280,10,9,,No Min
@@ -1528,6 +1526,7 @@ SERSA00313,Laser Scanner CU411-RS4,2,1,,No Min
 [No Code],"Connection Cable for VL-P-D-10-P6-CON300-0-DIN47100, Material T0110/10M",3,0,,No Min
 [No Code],amplifier module AT065,5,0,,No Min
 [No Code],screened control cable 2*0.5 mm²,3,0,,No Min
+60085095,Temperature Sensor TF-CX-12A-05S-S0-F0-T,3,2,,No Min
 [No Code],"Lemo size 2 S-plug ""J"" T-1-10-1J/10M",2,0,,No Min
 [No Code],service switch KG10 T103/40 KS51V/20A,1,0,,No Min
 [No Code],thermoelement cable GL-GL-PVA 2*0.22 mm²,7,0,,No Min
@@ -2416,7 +2415,7 @@ SERSA00313,Laser Scanner CU411-RS4,2,1,,No Min
 [No Code],Memory Unit 416880-62/4GB,2,0,,No Min
 [No Code],Laser Scanner SICK MICS3-AAAZ90AZ1P01/1089492,2,0,,No Min
 [No Code],Sensor Cable DOL-1208-G10MD25KM1/2079316,2,0,,No Min
-[No Code],Haake Safety Edge HSC-6535-01-T-L1510,1,1,,No Min
+60005503,Haake Safety Edge HSC-6535-01-T-L1510,2,1,,No Min
 [No Code],"Sounder XVUC9V/24VAC/DC, 400mA , 86dB",1,0,,No Min
 60049878,"Tower Light Base XVUC21B/24VAC/DC, 400mA",1,0,,No Min
 60032642,Safety Switch AZM161SK-12/12RK-024,2,5,,No Min
@@ -2557,7 +2556,6 @@ SERSA00313,Laser Scanner CU411-RS4,2,1,,No Min
 [No Code],Led Lamp 3102-3W/P=15W 24VDC L=1m,2,0,,No Min
 [No Code],Phoenix Contact UT 16-PE/3044212,4,0,,No Min
 60157521,Laser Scaner S30A-4011BA,1,1,,No Min
-60005503,Haake Safety Edge HSC-6535-01-T-L1510,1,1,,No Min
 [No Code],"Flexible Cable KAB-SPIKA-PUR7X0,75",1,0,,No Min
 [No Code],Foot Switch 3SE2924-3AA20,2,0,,No Min
 60005534,Proximity Sensor Sensor KJ2-M8EB30-DPS-V1,2,0,,No Min
