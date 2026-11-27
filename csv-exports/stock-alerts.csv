@@ -168,7 +168,7 @@ C.B NXB-63-2P-C63A,,,,20,0,,,No Min,,2
 C.B SIEMENS 5SY6-116-7/16A,60037473,35021687,W&H,20,0,,,No Min,,7
 Connecting Cable,60154004,35081912,W&H,20,0,,,No Min,12557080,1
 Connecting Cable l=4m,,35007303,W&H,20,0,,,No Min,,2
-Contactor 3RT2017-2BB41,60021781,35051022,W&H,20,0,,,No Min,,6
+Contactor 3RT2017-2BB41,,35051022,W&H,20,0,,,No Min,,6
 Contactor CAD 32 BL,,4215318,W&H,20,0,,,No Min,,5
 E.M Pull Wire Switch ZQ-700-11,60002791,35062945,W&H,20,0,2,,No Min,,5
 "Frequency Converter F5 / 1,5kW / 09F5C1B-3A0A",60002787,35040625,W&H,20,0,1,,No Min,,5
@@ -354,6 +354,7 @@ Connecting Cable,60153880,35081911,W&H,10,0,,,No Min,12557080,1
 Connecting Cable,60154032,35091055,W&H,10,0,,,No Min,12557080,1
 Connecting Cable SAIL-M12W-4-1.5U/1906260150,,35051655,W&H,10,0,,,No Min,,5
 Contactor 3RT1956-1CD00/230V,,35009779,W&H,10,0,,,No Min,,4
+Contactor 3RT2017-2BB41,,878012488,Kampf,10,0,0,,No Min,,2
 Contactor Benedict K0-05D00-22,60159432,35097188,W&H,10,0,,,No Min,,5
 Contactor Benedict K0-05D10,60158740,35098039,W&H,10,0,,,No Min,,5
 Contactor Benedict K0W05D10MG,60159650,35098040,W&H,10,0,,,No Min,,5
@@ -724,6 +725,7 @@ Push Button ZB5 AS844,,878007564,Kampf,5,0,,,No Min,,1
 push-button,,35081209,W&H,5,0,,,No Min,,2
 PushButton 3SU1000-0AB40-0AA0,,882178408,Kampf,5,0,0,,No Min,,1
 RC Element 3RT2926-1CB00,,35051260,W&H,5,0,,,No Min,,4
+RC motor suppression RC 3BU,,910995042,Lemo,5,0,0,,No Min,,5
 Safety Relay PNOZ s7 C,60059795,,,5,0,4,,No Min,,1
 Sensor Cable M12F0240205000,,,,5,0,,,No Min,,1
 Signal Lamb 24VDC,,35033358,W&H,5,0,,,No Min,,3
@@ -1511,7 +1513,6 @@ Contact Insert 09 31 006 2601,,4140292,W&H,1,0,,,No Min,,5
 Contact Insert 09 33 024 2701,,4140060,W&H,1,0,,,No Min,,1
 Contact Insert 09 36 008 3101,,4140339,W&H,1,0,,,No Min,,7
 Contact Insert 09320643001/ 16A/500V,,35048210,W&H,1,0,,,No Min,,1
-Contactor 3RT2017-2BB41,,,,1,0,0,,No Min,,1
 Contactor 3RT2317-1BB40,,,,1,0,,,No Min,,1
 Contactor 3TF45,,,,1,0,,,No Min,,1
 Contactor Base 3RV2927-7AA00,,05002.02.3088,Compound,1,0,,,No Min,,1
@@ -1715,6 +1716,7 @@ multiconductor control cable 4*2.5 mm²,,05004.99.0004,Compound,1,0,,,No Min,,1
 multiconductor control cable 7*1 mm²,,05004.03.0115,Compound,1,0,,,No Min,,1
 Network Switch 6GK5108-0BA00-2AC2,,882119816,Kampf,1,0,0,,No Min,,1
 NO Contact ZB5-AZ101,,878007219,Kampf,1,0,,,No Min,,1
+Operating Panel 4PP15.C420-01,,913750395,Lemo,1,0,0,,No Min,,1
 operating system W7,,913750444,Lemo,1,0,,,No Min,,1
 Operation Panel 4PP15 0420-01,60049734,913750076,Lemo,1,0,,,No Min,12556997,1
 OPERATOR PANEL B&R AP 5230,60174178,913623354,Lemo,1,0,,,No Min,,2
