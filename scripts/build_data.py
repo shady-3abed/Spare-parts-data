@@ -3,6 +3,9 @@
 
 Reads  workbook/All_Machines_Spareparts_Final.xlsm  (repo root) and writes
 website_data.json (repo root) with the exact schema the dashboard expects.
+Also generates changelog.json (repo root) for the dashboard's "Update log"
+tab: one entry per run (newest first), diffing the final catalog against the
+previous website_data.json.
 
 Run from the repo root:  python scripts/build_data.py
 Dependencies: openpyxl (pandas is installed by the workflow but not needed here).
@@ -83,6 +86,117 @@ def write_csvs(catalog, sa_rows):
             w.writerow([_s(x['code']), _s(x['name']), _s(x['pcs']), _s(x['stock']),
                         _s(x['min']), _s(x['status'])])
     return len(alerts)
+
+
+# ---- Changelog (dashboard "Update log" tab, idea 10) ----
+# The dashboard's "سجل التحديثات" tab reads changelog.json (repo root) via the
+# same channels as website_data.json. It expects a JSON array, newest first,
+# of entries: {date, items, alerts, added, critical, resolved,
+# stock_changes, note}. added/critical/resolved are [{name, newsap}];
+# stock_changes are [{name, newsap, old, new}] for |new-old| >= 10.
+# The diff is computed against the PREVIOUS website_data.json catalog, AFTER
+# the stock-changes.json overrides are applied (i.e. the final catalog).
+CHANGELOG = ROOT / 'changelog.json'
+CHANGELOG_MAX = 50
+
+
+def _cat_key(c):
+    """Match key between catalog items, same as the grouping in main():
+    New SAP when present, else (lower-cased name, vendor)."""
+    if c.get('newsap'):
+        return ('SAP', c['newsap'])
+    return ('NAME', (c.get('name') or '').lower(), c.get('vendor'))
+
+
+def _item_ref(c):
+    """The {name, newsap} reference the dashboard's changelog tab shows."""
+    return {'name': c.get('name'), 'newsap': c.get('newsap')}
+
+
+def _alert_count(catalog):
+    """Alert count using the SAME rule as the stock-alerts CSV in write_csvs:
+    stock == 0, or status Critical / Below Min, or unrecorded stock with
+    PCS > 0 (unrecorded stock counted as 0, per Adora's option A)."""
+    return sum(1 for c in catalog
+               if c['stock'] == 0 or c['status'] in ('Critical', 'Below Min')
+               or (c['stock'] is None and (c['pcs'] or 0) > 0))
+
+
+def _load_prev_catalog(path):
+    """Read the catalog from a previous website_data.json. Returns None when
+    the file is absent (first run -> baseline entry), else the catalog list
+    (or [] when the file is unreadable / has no catalog)."""
+    if not path.exists():
+        return None
+    try:
+        prev = json.loads(path.read_text(encoding='utf-8'))
+        cat = prev.get('catalog') if isinstance(prev, dict) else None
+        return cat if isinstance(cat, list) else []
+    except Exception as e:
+        print(f'WARNING: could not read previous {path.name}: {e}', file=sys.stderr)
+        return []
+
+
+def compute_changelog_entry(new_catalog, prev_catalog, run_date):
+    """Build one changelog entry by diffing the final new catalog against the
+    previous website_data.json catalog. prev_catalog is None on the first run
+    (no previous file), which yields a baseline entry with empty lists."""
+    entry = {
+        'date': run_date,
+        'items': len(new_catalog),
+        'alerts': _alert_count(new_catalog),
+        'added': [],
+        'critical': [],
+        'resolved': [],
+        'stock_changes': [],
+        'note': '',
+    }
+    if prev_catalog is None:
+        entry['note'] = 'baseline'
+        return entry
+    old_by_key = {}
+    for c in prev_catalog:
+        old_by_key[_cat_key(c)] = c
+    for c in new_catalog:
+        key = _cat_key(c)
+        old = old_by_key.get(key)
+        if old is None:
+            entry['added'].append(_item_ref(c))
+            continue
+        if old.get('status') != 'Critical' and c.get('status') == 'Critical':
+            entry['critical'].append(_item_ref(c))
+        if old.get('status') in ('Critical', 'Below Min') and \
+                c.get('status') not in ('Critical', 'Below Min'):
+            entry['resolved'].append(_item_ref(c))
+        os_ = old.get('stock')
+        ns = c.get('stock')
+        if os_ is not None and ns is not None and abs(ns - os_) >= 10:
+            entry['stock_changes'].append({'name': c.get('name'),
+                                           'newsap': c.get('newsap'),
+                                           'old': os_, 'new': ns})
+    return entry
+
+
+def update_changelog(entry):
+    """Prepend one entry to changelog.json (repo root), capping the history
+    at CHANGELOG_MAX entries. Returns the number of entries kept."""
+    history = []
+    if CHANGELOG.exists():
+        try:
+            raw = json.loads(CHANGELOG.read_text(encoding='utf-8'))
+            if isinstance(raw, list):
+                history = raw
+            else:
+                print(f'WARNING: {CHANGELOG.name} is not a JSON array; starting fresh',
+                      file=sys.stderr)
+        except Exception as e:
+            print(f'WARNING: could not read {CHANGELOG.name}: {e}; starting fresh',
+                  file=sys.stderr)
+    history = [entry] + history
+    history = history[:CHANGELOG_MAX]
+    with open(CHANGELOG, 'w', encoding='utf-8') as f:
+        json.dump(history, f, ensure_ascii=False, indent=2)
+    return len(history)
 
 
 def find_workbook():
@@ -506,9 +620,18 @@ def main():
         'watchlist': watch,
         'search_history': search_hist,
     }
+    # ---- Changelog for the dashboard "Update log" tab (idea 10) ----
+    # Diff the FINAL catalog (after stock-changes.json overrides) against the
+    # previous website_data.json, BEFORE overwriting it.
+    prev_catalog = _load_prev_catalog(OUT)
+    entry = compute_changelog_entry(catalog, prev_catalog, data['generated'])
     with open(OUT, 'w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, separators=(',', ':'))
     n_alerts = write_csvs(catalog, sa_rows)
+    n_hist = update_changelog(entry)
+    print('changelog entries:', n_hist, '| added', len(entry['added']),
+          '| critical', len(entry['critical']), '| resolved', len(entry['resolved']),
+          '| stock changes', len(entry['stock_changes']), '| note:', entry['note'] or '-')
     print('CSV exports:', 'stock-alerts', n_alerts, '| catalog', len(catalog),
           '| stock-analysis', len(sa_rows))
     print('catalog entries:', len(catalog))
